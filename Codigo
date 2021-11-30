@@ -1,88 +1,66 @@
-Importando as bibliotecas
+#Importando as bibliotecas
 import pandas as pd
 import matplotlib.pyplot as plt
-import pandas as pd
-import matplotlib.pyplot as plt
+import datetime as dt
+import seaborn as sns
 
-Leitura dos dados
-#importando dados da BBA3 (banco do brasil)
+#Leitura dos dados
+
+##Importando dados da BBA3 (banco do brasil)
 BB_df = pd.read_csv("FechamentoDiarioBB.csv")
 BB_df = pd.DataFrame(BB_df)
-
-
-#importando dados da Selic
-Selic_df = pd.read_csv("Selic.csv", sep = ";")
-
-
-# Separar a estrutura de datas para cada informação em uma coluna do DataFrame da Selic
-# Copia da SELIC com Split das coluna "Data" separado por /
-new = Selic_df["Data"].str.split("/", n = 2, expand = True)
-# Criando a Nova Coluna "Dia" com o new[0]
-Selic_df["Dia"]= new[0] 
-# Criando a Nova Coluna "Mes" com o new[1]
-Selic_df["Mes"]= new[1] 
-# Criando a Nova Coluna "Ano" com o new[2]
-Selic_df["Ano"]= new[2] 
-# Retirando a antiga coluna "Data" e a nova coluna "Dia"
-Selic_df.drop(columns =["Data", "Dia"], inplace = True)
-display(Selic_df)
-
-
-#Mudando o nome da coluna "Selic (aa)" para um que fique mais fácil
-Selic_df.rename(columns={'Selic (aa)': 'Taxa'}, inplace = True)
-# Alterando o tipo da coluna "Taxa"
-Selic_df['Taxa'] = Selic_df['Taxa'].astype(float)
-# Agrupando os dados da Selic_df para uma media mensal e transformando a taxa que esta anual em mensal
-Selic_df = Selic_df.groupby(['Ano','Mes']).mean()['Taxa']/12
-Selic_df = pd.DataFrame(Selic_df)
-Selic_df = Selic_df.reset_index()
-display(Selic_df)
-
-
-# Separar a estrutura de datas para cada informação em uma coluna do DataFrame do bb
-# Copia da BB com Split das coluna "Data" separado por /
-new2 = BB_df["Date"].str.split("/", n = 2, expand = True)
-# Criando a Nova Coluna "Dia" com o new[0]
-BB_df["Dia"]= new2[0] 
-# Criando a Nova Coluna "Mes" com o new[1]
-BB_df["Mes"]= new2[1] 
-# Criando a Nova Coluna "Ano" com o new[2]
-BB_df["Ano"]= new2[2] 
-# Retirando a antiga coluna "Data" e a nova coluna "Dia"
-BB_df.drop(columns =["Date", "Dia"], inplace = True)
-
-
-# Agrupando os dados do BB_df para uma media mensal e transformando a taxa que esta anual em mensal
-BB_df = BB_df.groupby(['Ano','Mes']).mean()
-BB_df = pd.DataFrame(BB_df)
-BB_df = BB_df.reset_index()
+​
 display(BB_df)
+display(BB_df.describe())
 
+BB_df.dtypes
 
-AnoMesSelic = Selic_df['Ano'] + "-" + Selic_df['Mes']
-Selic = Selic_df["Taxa"]
-plt.plot(AnoMesSelic, Selic)
+##Convertendo a coluna de 'Date' para datetime no BB_df¶
+BB_df['Date'] = pd.to_datetime(BB_df['Date'], format='%d/%m/%Y')
+print(BB_df.dtypes)
+
+##Transformando a data de dd/mm/yyyy para yyyy-mm-dd
+BB_df["Date"] = pd.to_datetime(BB_df["Date"]).dt.strftime('%Y-%m-%d')
+print(BB_df)
+
+BB_df['Date'] = pd.to_datetime(BB_df['Date'], format="%Y-%m-%d")
+print(BB_df.dtypes)
+
+##Agrupando os dados diários para mensal através da média do BB_df
+BB_df = BB_df.groupby(BB_df['Date'].dt.strftime('%Y-%m'))['Close'].mean()
+print(BB_df)
+
+##Plotanto o gráfico de linha dos dados mensais do BB_df
+plt.figure(figsize=(15, 7))
+plt.plot(BB_df)
+plt.title('Selic Mensal')
 plt.show()
 
-AnoMesBB = BB_df['Ano'] + "-" + BB_df['Mes']
-BB = BB_df["Close"]
-plt.plot(AnoMesBB, BB)
+##Importando dados da Selic
+Selic_df = pd.read_csv("Selic.csv", sep = ";")
+​
+display(Selic_df)
+display(Selic_df.describe())
+
+print(Selic_df.dtypes)
+
+##Convertendo a coluna de 'Data' para datetime no Selic_df
+Selic_df['Data'] = pd.to_datetime(Selic_df['Data'], format='%d/%m/%Y')
+print(Selic_df.dtypes)
+
+##Transformando a data de dd/mm/yyyy para yyyy-mm-dd no Selic_df
+Selic_df["Data"] = pd.to_datetime(Selic_df["Data"]).dt.strftime('%Y-%m-%d')
+print(Selic_df)
+
+Selic_df["Data"] = pd.to_datetime(Selic_df["Data"], format="%Y-%m-%d")
+print(Selic_df.dtypes)
+
+##Agrupando os dados diários para mensal através da média e transformando as taxas em mensal (elas estavam anual) no Selic_df
+Selic_df = Selic_df.groupby(Selic_df['Data'].dt.strftime('%Y-%m'))['Selic (aa)'].mean()/12
+print(Selic_df)
+
+##Plotanto o gráfico de linha dos dados mensais do Selic_df
+plt.figure(figsize=(15, 7))
+plt.plot(Selic_df)
+plt.title('Selic Mensal')
 plt.show()
-
-plt.plot(AnoMesBB, BB)
-plt.plot(AnoMesBB, Selic)
-plt.show()
-
-Selic_dfTeste2 = Selic_df.groupby(['Ano','Mes']).mean()['Taxa']/12
-display(Selic_dfTeste2)
-
-
-Selic_df.head()
-
-
-# Agrupando os dados da Selic_df para uma media mensal e transformando a taxa que esta anual em mensal
-Selic_df2 = Selic_df.groupby(['Ano','Mes']).mean()['Taxa']/12
-display(Selic_df2)
-
-Selic_df2 = Selic_df2.reset_index()
-display(Selic_df2["Ano"])
